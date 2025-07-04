@@ -20,3 +20,10 @@ As the files show below:
 cameraParams.mat
 estimateError.mat
 
+
+# optical maker tracking
+
+## Video to demo the algorithm
+
+![optical marker tracking](img\marker_tracking.gif)
+
