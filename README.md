@@ -3,8 +3,7 @@
 Checkerboard images can be used to calibrate the camera. The calibration process estimates the intrinsic parameters of the camera, such as focal length, principal point, and lens distortion coefficients.
 
 The image is below:
-![checkerboard](img\checkerboard.png)
-![checkerboard](img\checkerboardlarge.png)
+![checkerboard](md\checkerboardlarge.png)
 
 
 ## Matlab
@@ -34,11 +33,12 @@ When you use the calibration parameters, you should keep the pixel size in mind.
 
 ## Video to demo the algorithm
 
-![optical marker tracking](img\marker_tracking.gif)
-
+<img src="md/marker_tracking.gif" alt="optical marker tracking" width="400" />
 
 # QR code detection
 
 ## Video to demo the algorithm
+
+<img src="md/qrcode_tracking.gif" alt="QR code detection" width="400" />
 
 
