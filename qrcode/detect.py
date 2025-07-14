@@ -125,7 +125,6 @@ def main():
                     img, cam_matrix, dist_coeffs,
                     rvecs[idx], avg_t.reshape(3, 1), half
                 )
-                        # 若检测到至少两个标记，计算它们之间的平移欧氏距离并添加到输出
             if len(ids) >= 2 and len(pose_windows)>=2:
                 # 取最新两标记平滑后位置
                 ids_list = list(ids.flatten())
@@ -139,6 +138,25 @@ def main():
                 r2 = rvecs[1].flatten()
                 r_diff = np.linalg.norm(r2 - r1)
                 out_str.append(f"RotDiff={r_diff:.5f}rad")
+
+                # 1) 计算两个标记的像素中心
+                pts1 = corners[0].reshape(4, 2)
+                pts2 = corners[1].reshape(4, 2)
+                c1 = tuple(np.mean(pts1, axis=0).astype(int))
+                c2 = tuple(np.mean(pts2, axis=0).astype(int))
+
+                # 2) 画线和两个小圆点
+                cv2.line(img, c1, c2, (0, 255, 0), 2, cv2.LINE_AA)
+                cv2.circle(img, c1, 5, (0, 0, 255), -1, cv2.LINE_AA)
+                cv2.circle(img, c2, 5, (0, 0, 255), -1, cv2.LINE_AA)
+
+                # 3) 在连线中点处标注距离值
+                mid_pt = ((c1[0]+c2[0])//2, (c1[1]+c2[1])//2)
+                cv2.putText(
+                    img, f"{dist_xyz*100:.1f}cm", mid_pt,
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2, cv2.LINE_AA
+                )
+
             # 输出到同一行并回退
             sys.stdout.write(" | ".join(out_str) + "\r")
             sys.stdout.flush()
