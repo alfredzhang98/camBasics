@@ -4,6 +4,7 @@ Checkerboard images can be used to calibrate the camera. The calibration process
 
 The image is below:
 ![checkerboard](img\checkerboard.png)
+![checkerboard](img\checkerboardlarge.png)
 
 
 ## Matlab
