@@ -6,16 +6,25 @@ import numpy as np
 # -------------------------
 # 相机流参数
 # -------------------------
-IR_INDEX  = 2    
-WIDTH, HEIGHT = 1280, 720
+SensorName = "RGB"
+
+if SensorName == "IR":
+    IR_INDEX = 1  
+
+WIDTH, HEIGHT = 1920, 1080  # 分辨率
 FREQ = 30         # 帧率
 
 # -------------------------
 # 配置保存目录
 # -------------------------
-base_dir = os.path.dirname(os.path.abspath(__file__))
-save_dir = os.path.join(base_dir, f'ir{IR_INDEX}_calib_images')
-os.makedirs(save_dir, exist_ok=True)
+if SensorName == "IR":
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    save_dir = os.path.join(base_dir, f'ir{IR_INDEX}_calib_images')
+    os.makedirs(save_dir, exist_ok=True)
+elif SensorName == "RGB":
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    save_dir = os.path.join(base_dir, 'rgb_calib_images')
+    os.makedirs(save_dir, exist_ok=True)
 
 print(f"保存目录: {save_dir}")
 
@@ -24,11 +33,14 @@ print(f"保存目录: {save_dir}")
 # -------------------------
 pipeline = rs.pipeline()
 cfg = rs.config()
-cfg.enable_stream(rs.stream.infrared, IR_INDEX, WIDTH, HEIGHT, rs.format.y8, FREQ)
+if SensorName == "IR":
+    cfg.enable_stream(rs.stream.infrared, IR_INDEX, WIDTH, HEIGHT, rs.format.y8, FREQ)
+elif SensorName == "RGB":
+    cfg.enable_stream(rs.stream.color, WIDTH, HEIGHT, rs.format.bgr8, FREQ)
 profile = pipeline.start(cfg)
 
 # -------------------------
-# 配置 IR 传感器参数
+# 配置 IR / RGB 摄像头
 # -------------------------
 for sensor in profile.get_device().sensors:
     name = sensor.get_info(rs.camera_info.name).lower()
@@ -72,17 +84,27 @@ for sensor in profile.get_device().sensors:
 # -------------------------
 # 实时显示并手动确认保存
 # -------------------------
-cv2.namedWindow('IR Preview', cv2.WINDOW_NORMAL)
-img_count = 0
-print("IR 实时流: 按 's' 冻结并进入确认，按 'q' 退出。")
+if SensorName == "IR":
+    cv2.namedWindow('IR Preview', cv2.WINDOW_NORMAL)
+elif SensorName == "RGB":
+    cv2.namedWindow('RGB Preview', cv2.WINDOW_NORMAL)
+
+img_count = 0   
+print("实时流: 按 's' 冻结并进入确认，按 'q' 退出。")
 
 try:
     while True:
         # 1ms 刷新一次流
         frames = pipeline.wait_for_frames()
-        ir_frame = frames.get_infrared_frame(IR_INDEX)
-        img = np.asanyarray(ir_frame.get_data())
-        cv2.imshow('IR Preview', img)
+        # 获取 IR 图像\
+        if SensorName == "IR":
+            ir_frame = frames.get_infrared_frame(IR_INDEX)
+            img = np.asanyarray(ir_frame.get_data())
+            cv2.imshow('IR Preview', img)
+        elif SensorName == "RGB":
+            color_frame = frames.get_color_frame()
+            img = np.asanyarray(color_frame.get_data())
+            cv2.imshow('RGB Preview', img)
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord('s'):
@@ -91,7 +113,10 @@ try:
             while True:
                 k2 = cv2.waitKey(0) & 0xFF
                 if k2 == ord('y'):
-                    filename = f'ir_{img_count:03d}.png'
+                    if SensorName == "IR":
+                        filename = f'ir_{img_count:03d}.png'
+                    elif SensorName == "RGB":
+                        filename = f'rgb_{img_count:03d}.png'
                     filepath = os.path.join(save_dir, filename)
                     cv2.imwrite(filepath, img)
                     print(f"已保存: {filepath}")

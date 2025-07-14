@@ -6,15 +6,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-IR_INDEX = 1
+SensorName = "RGB"
+
+if SensorName == "IR":
+    IR_INDEX = 1
 
 # -------------------------
 # 路径配置
 # -------------------------
 base_dir = os.path.dirname(os.path.abspath(__file__))
-save_dir = os.path.join(base_dir, f'ir{IR_INDEX}_calib_images')
-vis_dir = os.path.join(base_dir, f'ir{IR_INDEX}_calib_vis')
-os.makedirs(vis_dir, exist_ok=True)
+if SensorName == "IR":
+    save_dir = os.path.join(base_dir, f'{SensorName}{IR_INDEX}_calib_images')
+    vis_dir = os.path.join(base_dir, f'{SensorName}{IR_INDEX}_calib_vis')
+    os.makedirs(vis_dir, exist_ok=True)
+elif SensorName == "RGB":
+    save_dir = os.path.join(base_dir, f'{SensorName}_calib_images')
+    vis_dir = os.path.join(base_dir, f'{SensorName}_calib_vis')
+    os.makedirs(vis_dir, exist_ok=True)
 
 # -------------------------
 # 棋盘格参数
@@ -36,7 +44,10 @@ objp *= square_size_mm
 # -------------------------
 objpoints = []  # 3D 点
 imgpoints = []  # 2D 点
-image_paths = sorted(glob.glob(os.path.join(save_dir, 'ir_*.png')))
+if SensorName == "IR":
+    image_paths = sorted(glob.glob(os.path.join(save_dir, 'ir_*.png')))
+elif SensorName == "RGB":
+    image_paths = sorted(glob.glob(os.path.join(save_dir, 'rgb_*.png')))
 
 for fname in image_paths:
     img = cv2.imread(fname, cv2.IMREAD_GRAYSCALE)
@@ -77,9 +88,14 @@ calib_data = {
     'pattern_size': pattern_size,
     'square_size_mm': square_size_mm,
 }
-with open(os.path.join(base_dir, f'ir{IR_INDEX}_intrinsics.json'), 'w') as f:
-    json.dump(calib_data, f, indent=4)
-print("内参已保存至 ir{IR_INDEX}_intrinsics.json")
+if SensorName == "IR":
+    with open(os.path.join(base_dir, f'ir{IR_INDEX}_intrinsics.json'), 'w') as f:
+        json.dump(calib_data, f, indent=4)
+    print("内参已保存至 ir{IR_INDEX}_intrinsics.json")
+elif SensorName == "RGB":
+    with open(os.path.join(base_dir, 'rgb_intrinsics.json'), 'w') as f:
+        json.dump(calib_data, f, indent=4)
+    print("内参已保存至 rgb_intrinsics.json")
 
 # -------------------------
 # 可视化 1: 绘制角点

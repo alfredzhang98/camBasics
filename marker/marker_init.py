@@ -89,6 +89,7 @@ class MarkerInit:
         # │ Depth      │ 0     │ 1280×720   │ z16      │ 15, 30           │
         # │ Color      │ 0     │ 640×480    │ rgb8/bgr8│ 6, 15, 30, 60    │
         # │ Color      │ 0     │ 1280×720   │ rgb8/bgr8│ 15, 30           │
+        # │ Color      │ 0     │ 1920×1080  │ rgb8/bgr8│ 15, 30           │
         # │ Infrared   │ 0     │ 640×480    │ y8       │ 6, 15, 30        │
         # │ Infrared   │ 1     │ 640×480    │ y8       │ 6, 15, 30        │
         # │ Infrared   │ 0     │ 1280×720   │ y8       │ 6, 15, 30        │
