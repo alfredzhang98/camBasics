@@ -3,6 +3,7 @@
 Checkerboard images can be used to calibrate the camera. The calibration process estimates the intrinsic parameters of the camera, such as focal length, principal point, and lens distortion coefficients.
 
 The image is below:
+
 <img src="md/checkerboardlarge.png" alt="checkerboard" width="400" />
 
 
