@@ -4,13 +4,29 @@ import cv2
 import time
 from kalman_filter import MarkerTracker
 from outlier_detection import RobustMarkerDetector
+import os
+import json
 
 class MarkerInit:
 
-    def __init__(self, debug=False):
+    def __init__(self, IR_INDEX = 1, debug=False):
 
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        self.calib_path = os.path.join(base_dir, f'ir{IR_INDEX}_intrinsics.json')
         self.DEBUG = debug
 
+        # Load the calibration file data if it exists
+        if not os.path.isfile(self.calib_path):
+            raise FileNotFoundError(f"Calibration file not found: {self.calib_path}")
+        with open(self.calib_path, 'r') as f:
+            calib = json.load(f)
+
+        self.K = np.array(calib['camera_matrix'], dtype=np.float32)
+        self.dist = np.array(calib['distortion_coefficients'], dtype=np.float32).reshape(-1, 1)
+        if self.DEBUG:
+            print("Loaded camera matrix:\n", self.K)
+            print("Loaded dist coeffs:\n", self.dist.ravel())
+        
         ############
         # in order to make the result perfect we need some strategy
         # 1. The circle confidence would be change order, we need to make sure A, B, C, D identify could be tracked correctly - kalman_filter.py
@@ -86,7 +102,7 @@ class MarkerInit:
         #
         self.config.enable_stream(
             rs.stream.infrared, # Stream type: Infrared
-            1,                  # Stream index: second IR sensor (0=left, 1=right)
+            1,                  # Stream index: second IR sensor
             1280,               # Width: 1280 px
             720,                # Height: 720 px
             rs.format.y8,       # Format: Y8 (8-bit grayscale)
@@ -102,7 +118,7 @@ class MarkerInit:
 
         # Set the exposure for the infrared sensor
         if depth_sensor.supports(rs.option.exposure):
-            depth_sensor.set_option(rs.option.exposure, 2000)
+            depth_sensor.set_option(rs.option.exposure, 300)
 
         profile = self.pipeline.start(self.config)
 
@@ -158,6 +174,15 @@ class MarkerInit:
                     continue
                 print(f"  {opt.name}: {val:.3f}, Range=[{r.min:.3f}, {r.max:.3f}], Step={r.step:.3f}")
             print()
+
+    def undistort_ir(self, ir_image):
+        """
+        Undistort the infrared image using the camera intrinsic parameters.
+        """
+        h, w = ir_image.shape[:2]
+        # Create a new camera matrix from the original one
+        undistorted = cv2.undistort(ir_image, self.K, self.dist, None, self.K)
+        return undistorted
 
     def morphological_operations(self, image, kernel_open_size=(3, 3), kernel_close_size=(5, 5), iterations=1):
         """
@@ -412,8 +437,10 @@ class MarkerInit:
         
         results = {}
         # 1. Preprocess the IR image
+        # undistort the IR image
+        ir_image = self.undistort_ir(ir_raw_image)
         # morphological operations to enhance features
-        morphological_image = self.morphological_operations(ir_raw_image)
+        morphological_image = self.morphological_operations(ir_image)
         # high pass filter to extract high-frequency components
         high_freq_image = self.extract_ir_high_freq(morphological_image)
         # Gaussian smoothing to reduce noise
